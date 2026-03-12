@@ -1,0 +1,99 @@
+{
+  "version": "1.0.0",
+  "description": "多主題模板配置，支援快速切換不同類型的資訊蒐集",
+  "templates": {
+    "steam_competition": {
+      "name": "STEAM 教育比賽",
+      "description": "蒐集 STEAM 相關的教育競賽資訊",
+      "keywords": [
+        "STEAM", "STEM", "科學", "技術", "工程", "藝術", "數學",
+        "競賽", "比賽", "科展", "程式", "機器人"
+      ],
+      "exclude_keywords": ["徵才", "招聘", "會議"],
+      "target_audiences": ["國小", "國中", "高中", "大學"],
+      "categories": ["Science", "Technology", "Engineering", "Arts", "Math"],
+      "sheet_name": "STEAM_Competitions",
+      "message_prefix": "🏆 STEAM 比賽資訊"
+    },
+    "summer_camp": {
+      "name": "暑期夏令營",
+      "description": "蒐集暑期 STEAM 夏令營活動資訊",
+      "keywords": [
+        "夏令營", "暑期", "營隊", "summer camp", "workshop",
+        "科學營", "程式營", "機器人營", "創客營"
+      ],
+      "exclude_keywords": ["徵才", "招聘"],
+      "target_audiences": ["國小", "國中", "高中"],
+      "categories": ["Science", "Technology", "Engineering", "Arts", "Math"],
+      "sheet_name": "Summer_Camps",
+      "message_prefix": "☀️ 暑期夏令營資訊"
+    },
+    "teacher_training": {
+      "name": "教師研習",
+      "description": "蒐集教師專業發展研習資訊",
+      "keywords": [
+        "教師研習", "研習", "工作坊", "teacher training", "workshop",
+        "教學", "課程", "專業發展", "增能"
+      ],
+      "exclude_keywords": ["徵才", "招聘"],
+      "target_audiences": ["教師"],
+      "categories": ["Science", "Technology", "Engineering", "Arts", "Math"],
+      "sheet_name": "Teacher_Training",
+      "message_prefix": "👨‍🏫 教師研習資訊"
+    },
+    "government_grant": {
+      "name": "政府補助計畫",
+      "description": "蒐集政府教育補助和計畫資訊",
+      "keywords": [
+        "補助", "計畫", "申請", "grant", "funding",
+        "教育部", "科技部", "經費", "獎助"
+      ],
+      "exclude_keywords": ["徵才", "招聘"],
+      "target_audiences": ["學校", "教師", "團體"],
+      "categories": ["Science", "Technology", "Engineering", "Arts", "Math"],
+      "sheet_name": "Government_Grants",
+      "message_prefix": "💰 政府補助資訊"
+    },
+    "education_event": {
+      "name": "教育活動",
+      "description": "蒐集各類教育相關活動資訊",
+      "keywords": [
+        "活動", "展覽", "講座", "event", "exhibition",
+        "科學", "教育", "學習", "體驗"
+      ],
+      "exclude_keywords": ["徵才", "招聘", "商業"],
+      "target_audiences": ["國小", "國中", "高中", "大學", "全年齡"],
+      "categories": ["Science", "Technology", "Engineering", "Arts", "Math"],
+      "sheet_name": "Education_Events",
+      "message_prefix": "📅 教育活動資訊"
+    }
+  },
+  "usage_instructions": {
+    "how_to_switch": "在 .env 檔案中設定 CURRENT_TOPIC 變數",
+    "example": "CURRENT_TOPIC=summer_camp",
+    "steps": [
+      "1. 選擇要使用的主題模板",
+      "2. 更新 .env 中的 CURRENT_TOPIC",
+      "3. 在 Google Sheets 中建立對應的工作表",
+      "4. 重新啟動 n8n workflow",
+      "5. 測試執行確認正常運作"
+    ]
+  },
+  "customization_guide": {
+    "add_new_template": [
+      "1. 在 templates 物件中新增模板定義",
+      "2. 定義 keywords 和 exclude_keywords",
+      "3. 設定 target_audiences 和 categories",
+      "4. 指定 sheet_name 和 message_prefix",
+      "5. 在 Google Sheets 中建立對應工作表",
+      "6. 更新 .env 設定並測試"
+    ],
+    "modify_existing": [
+      "1. 找到要修改的模板",
+      "2. 更新 keywords 或其他設定",
+      "3. 儲存檔案",
+      "4. 重新啟動 workflow",
+      "5. 測試確認變更生效"
+    ]
+  }
+}

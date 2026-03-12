@@ -1,0 +1,111 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2024-03-12",
+  "groups": [
+    {
+      "id": "main_group",
+      "name": "STEAM 比賽資訊總群",
+      "group_id": "YOUR_LINE_GROUP_ID_HERE",
+      "enabled": true,
+      "target_audience": "all",
+      "description": "所有 STEAM 比賽資訊的主要推播群組",
+      "message_format": "text",
+      "max_items_per_message": 5,
+      "send_time": "08:00"
+    },
+    {
+      "id": "elementary_group",
+      "name": "國小組",
+      "group_id": "YOUR_ELEMENTARY_GROUP_ID",
+      "enabled": false,
+      "target_audience": "國小",
+      "description": "專門推播適合國小學生的比賽資訊",
+      "message_format": "flex",
+      "max_items_per_message": 10,
+      "send_time": "08:00",
+      "filters": {
+        "target_audience": ["國小", "全年齡"],
+        "exclude_categories": []
+      }
+    },
+    {
+      "id": "junior_group",
+      "name": "國中組",
+      "group_id": "YOUR_JUNIOR_GROUP_ID",
+      "enabled": false,
+      "target_audience": "國中",
+      "description": "專門推播適合國中學生的比賽資訊",
+      "message_format": "flex",
+      "max_items_per_message": 10,
+      "send_time": "08:00",
+      "filters": {
+        "target_audience": ["國中", "全年齡"],
+        "exclude_categories": []
+      }
+    },
+    {
+      "id": "senior_group",
+      "name": "高中組",
+      "group_id": "YOUR_SENIOR_GROUP_ID",
+      "enabled": false,
+      "target_audience": "高中",
+      "description": "專門推播適合高中學生的比賽資訊",
+      "message_format": "flex",
+      "max_items_per_message": 10,
+      "send_time": "08:00",
+      "filters": {
+        "target_audience": ["高中", "全年齡"],
+        "exclude_categories": []
+      }
+    },
+    {
+      "id": "teacher_group",
+      "name": "教師專區",
+      "group_id": "YOUR_TEACHER_GROUP_ID",
+      "enabled": false,
+      "target_audience": "all",
+      "description": "提供給教師的完整比賽資訊，包含所有年齡層",
+      "message_format": "summary",
+      "max_items_per_message": 20,
+      "send_time": "07:30",
+      "filters": {
+        "target_audience": ["國小", "國中", "高中", "全年齡"],
+        "exclude_categories": []
+      },
+      "additional_info": true
+    }
+  ],
+  "routing_rules": {
+    "default_group": "main_group",
+    "multi_group_enabled": false,
+    "routing_logic": "target_audience",
+    "fallback_to_main": true
+  },
+  "message_settings": {
+    "text": {
+      "max_length": 2000,
+      "include_url": true,
+      "include_summary": true
+    },
+    "flex": {
+      "max_cards": 10,
+      "card_style": "compact",
+      "include_images": false
+    },
+    "summary": {
+      "group_by": "category",
+      "show_statistics": true,
+      "include_sheet_link": true
+    }
+  },
+  "notification_settings": {
+    "quiet_hours": {
+      "enabled": false,
+      "start": "22:00",
+      "end": "07:00"
+    },
+    "weekend_delivery": true,
+    "holiday_delivery": true,
+    "max_messages_per_day": 3
+  }
+}

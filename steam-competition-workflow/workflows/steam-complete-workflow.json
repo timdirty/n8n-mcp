@@ -1,0 +1,526 @@
+{
+  "name": "STEAM 教育比賽資訊蒐集系統（完整版）",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "定時觸發（每 6 小時）",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "steam-trigger",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "手動觸發 Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 500],
+      "webhookId": "steam-manual-trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://www.edu.tw/rss/news.xml",
+        "options": {}
+      },
+      "id": "rss-edu-tw",
+      "name": "RSS：教育部",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [500, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://www.doe.gov.taipei/rss/news.xml",
+        "options": {}
+      },
+      "id": "rss-taipei",
+      "name": "RSS：台北市教育局",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [500, 350]
+    },
+    {
+      "parameters": {
+        "url": "https://steam.edu.tw/rss/competitions.xml",
+        "options": {}
+      },
+      "id": "rss-steam-platform",
+      "name": "RSS：STEAM 平台",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [500, 500]
+    },
+    {
+      "parameters": {
+        "url": "https://api.education-competitions.tw/v1/steam",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "http-api-source",
+      "name": "HTTP：API 資料源",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 650]
+    },
+    {
+      "parameters": {
+        "url": "https://competitions.example.com/steam",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "http-web-scraper",
+      "name": "HTTP：網頁爬蟲",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 800]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// 資料正規化\nconst items = $input.all();\nconst normalized = [];\n\nfor (const item of items) {\n  const data = item.json;\n  \n  const normalizedItem = {\n    title: data.title || data.name || '',\n    description: data.description || data.content || data.summary || '',\n    url: data.link || data.url || '',\n    publishDate: data.pubDate || data.date || data.publishedAt || new Date().toISOString(),\n    source: data.source || 'Unknown',\n    image: data.image || data.thumbnail || '',\n    rawData: data,\n    processedAt: new Date().toISOString()\n  };\n  \n  normalizedItem.title = normalizedItem.title.trim();\n  normalizedItem.description = normalizedItem.description.trim();\n  \n  if (normalizedItem.title && normalizedItem.description) {\n    normalized.push({ json: normalizedItem });\n  }\n}\n\nreturn normalized;"
+      },
+      "id": "function-normalize",
+      "name": "資料正規化",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 400]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// 關鍵字過濾\nconst items = $input.all();\nconst filtered = [];\n\nconst STEAM_KEYWORDS = [\n  '科學', '物理', '化學', '生物', '地球科學', '環境',\n  '程式', '編程', '資訊', 'AI', '人工智慧', '機器學習', '程式設計',\n  '工程', '機器人', '創客', 'Maker', '電子', '機械',\n  '藝術', '設計', '創意', '美術', '音樂',\n  '數學', '統計', '邏輯',\n  'STEAM', 'STEM', '競賽', '比賽', '挑戰賽'\n];\n\nfor (const item of items) {\n  const data = item.json;\n  const text = (data.title + ' ' + data.description).toLowerCase();\n  \n  const matchedKeywords = STEAM_KEYWORDS.filter(keyword => \n    text.includes(keyword.toLowerCase())\n  );\n  \n  if (matchedKeywords.length > 0) {\n    filtered.push({\n      json: {\n        ...data,\n        matchedKeywords,\n        relevanceScore: matchedKeywords.length / STEAM_KEYWORDS.length\n      }\n    });\n  }\n}\n\nreturn filtered;"
+      },
+      "id": "function-filter",
+      "name": "關鍵字過濾",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 400]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "STEAM_Competitions",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "google-sheets-read",
+      "name": "讀取現有資料",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1000, 600],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// 五層去重機制\nconst crypto = require('crypto');\n\nfunction md5(data) {\n  return crypto.createHash('md5').update(JSON.stringify(data)).digest('hex');\n}\n\nfunction similarity(s1, s2) {\n  const m = Math.max(s1.length, s2.length);\n  if (!m) return 1;\n  const d = [];\n  for (let i = 0; i <= s1.length; i++) {\n    d[i] = [i];\n    for (let j = 1; j <= s2.length; j++) {\n      d[i][j] = i === 0 ? j : 0;\n    }\n  }\n  for (let i = 1; i <= s1.length; i++) {\n    for (let j = 1; j <= s2.length; j++) {\n      d[i][j] = Math.min(\n        d[i-1][j] + 1,\n        d[i][j-1] + 1,\n        d[i-1][j-1] + (s1[i-1] === s2[j-1] ? 0 : 1)\n      );\n    }\n  }\n  return 1 - d[s1.length][s2.length] / m;\n}\n\nfunction tfidf(text, corpus) {\n  const words = text.toLowerCase().match(/[\\u4e00-\\u9fa5a-z0-9]+/g) || [];\n  const freq = {};\n  words.forEach(w => { freq[w] = (freq[w] || 0) + 1; });\n  const result = {};\n  for (const w of Object.keys(freq)) {\n    const df = corpus.filter(d => d.toLowerCase().includes(w)).length;\n    result[w] = freq[w] * Math.log((corpus.length + 1) / (df + 1));\n  }\n  return result;\n}\n\nfunction cosine(v1, v2) {\n  const keys = new Set([...Object.keys(v1), ...Object.keys(v2)]);\n  let dot = 0, m1 = 0, m2 = 0;\n  for (const k of keys) {\n    const a = v1[k] || 0, b = v2[k] || 0;\n    dot += a * b; m1 += a * a; m2 += b * b;\n  }\n  return (!m1 || !m2) ? 0 : dot / (Math.sqrt(m1) * Math.sqrt(m2));\n}\n\nconst TITLE_THRESHOLD = 0.85;\nconst CONTENT_THRESHOLD = 0.90;\nconst TIME_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;\n\n// 從讀取現有資料節點取得已存在的資料\nconst existingItems = $input.all().map(e => e.json);\n// 從關鍵字過濾節點取得新資料\nconst newItems = $('關鍵字過濾').all();\n\nconst results = [];\nconst corpus = existingItems.map(i => i.description || '');\n\nfor (const item of newItems) {\n  const d = item.json;\n  let isDup = false;\n\n  // Layer 1: Hash\n  const h = md5({ title: d.title, url: d.url, description: d.description });\n  if (existingItems.some(e => md5({ title: e.title, url: e.url, description: e.description }) === h)) {\n    isDup = true;\n  }\n\n  // Layer 2: URL\n  if (!isDup && d.url && existingItems.some(e => e.url === d.url)) {\n    isDup = true;\n  }\n\n  // Layer 3: Title similarity\n  if (!isDup && existingItems.some(e => similarity(d.title || '', e.title || '') >= TITLE_THRESHOLD)) {\n    isDup = true;\n  }\n\n  // Layer 4: Time window + title\n  if (!isDup) {\n    const ts = new Date(d.publishDate || Date.now()).getTime();\n    isDup = existingItems.some(e => {\n      const ets = new Date(e.publishDate || e.scraped_at || Date.now()).getTime();\n      return Math.abs(ts - ets) <= TIME_WINDOW_MS && similarity(d.title || '', e.title || '') >= 0.70;\n    });\n  }\n\n  // Layer 5: Content TF-IDF + Cosine\n  if (!isDup) {\n    const allCorpus = [...corpus, d.description || ''];\n    const v1 = tfidf(d.description || '', allCorpus);\n    isDup = existingItems.some(e => cosine(v1, tfidf(e.description || '', allCorpus)) >= CONTENT_THRESHOLD);\n  }\n\n  if (!isDup) {\n    results.push({ json: { ...d, processedAt: new Date().toISOString() } });\n  }\n}\n\nconsole.log('去重結果: ' + newItems.length + ' 筆輸入, ' + results.length + ' 筆通過');\nreturn results;"
+      },
+      "id": "function-dedup",
+      "name": "五層去重",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
+          "conditions": [
+            {
+              "id": "check-new-data",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-has-new-data",
+      "name": "檢查新資料",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1500, 400]
+    },
+    {
+      "parameters": {},
+      "id": "noop-no-data",
+      "name": "無新資料",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1750, 600]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_OPENAI_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'system', content: '你是STEAM教育專家。對每個比賽同時完成分類和摘要。\\n\\nSTEAM分類：S=科學, T=技術, E=工程, A=藝術, M=數學。可多標籤，按重要性排序。\\n\\n摘要：100-150字繁體中文，包含比賽名稱、主題、對象、日期、獎項。\\n\\n回傳嚴格JSON，欄位：categories(陣列如[\"T\",\"E\"]), primary(主分類字母), confidence(0-1數字), reasoning(分類理由), summary(摘要文字), keyPoints(重點陣列), callToAction(行動呼籲)'}, { role: 'user', content: '標題：' + ($json.title || '') + '\\n描述：' + ($json.description || '') + '\\n來源：' + ($json.source || '未知') + '\\n日期：' + ($json.publishDate || '未知') }], temperature: 0.3, response_format: { type: 'json_object' } }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "http-ai-classify",
+      "name": "AI 分類+摘要",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1750, 300],
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// 整合 AI 分類結果與原始資料\nconst crypto = require('crypto');\nconst items = $input.all();\nconst originalItems = $('五層去重').all();\nconst categoryMap = { S: 'Science', T: 'Technology', E: 'Engineering', A: 'Arts', M: 'Mathematics' };\nconst results = [];\n\nfor (let i = 0; i < originalItems.length; i++) {\n  const original = originalItems[i]?.json || {};\n  const apiResponse = items[i]?.json || {};\n  let aiResult = {};\n\n  try {\n    const content = apiResponse.choices?.[0]?.message?.content || '{}';\n    aiResult = JSON.parse(content);\n  } catch (e) {\n    aiResult = {\n      categories: ['Mixed'],\n      primary: 'T',\n      confidence: 0.5,\n      summary: (original.description || '').substring(0, 150),\n      keyPoints: [],\n      reasoning: 'AI parsing failed'\n    };\n  }\n\n  const id = 'steam_' + new Date().getFullYear() + '_' + crypto.randomBytes(4).toString('hex');\n  const hashKey = crypto.createHash('md5')\n    .update(JSON.stringify({ title: original.title, url: original.url }))\n    .digest('hex');\n\n  results.push({\n    json: {\n      id,\n      title: original.title || '',\n      organizer: original.source || '',\n      category: categoryMap[aiResult.primary] || 'Mixed',\n      target_audience: '全年齡',\n      registration_start: '',\n      registration_end: '',\n      competition_date: '',\n      location: '',\n      description: original.description || '',\n      url: original.url || '',\n      contact: '',\n      prize: '',\n      fee: '',\n      source: original.source || '',\n      scraped_at: new Date().toISOString(),\n      status: 'active',\n      hash_key: hashKey,\n      sent_to_line: 'FALSE',\n      sent_at: '',\n      classification: {\n        categories: aiResult.categories || ['Mixed'],\n        primary: aiResult.primary || 'T',\n        confidence: aiResult.confidence || 0.5,\n        reasoning: aiResult.reasoning || ''\n      },\n      summary: {\n        summary: aiResult.summary || (original.description || '').substring(0, 150),\n        keyPoints: aiResult.keyPoints || [],\n        callToAction: aiResult.callToAction || ''\n      },\n      publishDate: original.publishDate || '',\n      matchedKeywords: original.matchedKeywords || [],\n      relevanceScore: original.relevanceScore || 0,\n      image: original.image || ''\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "function-merge-ai",
+      "name": "整合 AI 結果",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "批次處理",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [2250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "STEAM_Competitions",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData"
+        },
+        "options": {}
+      },
+      "id": "google-sheets-write",
+      "name": "寫入比賽資料",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [2500, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// LINE Flex Message 格式化\nconst COLORS = {\n  S: { p: '#4CAF50', s: '#81C784', n: '科學' },\n  T: { p: '#2196F3', s: '#64B5F6', n: '技術' },\n  E: { p: '#FF9800', s: '#FFB74D', n: '工程' },\n  A: { p: '#E91E63', s: '#F06292', n: '藝術' },\n  M: { p: '#9C27B0', s: '#BA68C8', n: '數學' }\n};\n\nfunction fmtDate(d) {\n  if (!d) return '日期未定';\n  const dt = new Date(d);\n  return dt.getFullYear() + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + String(dt.getDate()).padStart(2, '0');\n}\n\nfunction createBubble(c) {\n  const pc = c.classification?.primary || 'T';\n  const cats = c.classification?.categories || [pc];\n  const sum = c.summary?.summary || (c.description || '').substring(0, 150);\n  const kp = c.summary?.keyPoints || [];\n\n  const badges = cats.map(cat => ({\n    type: 'box', layout: 'baseline',\n    backgroundColor: (COLORS[cat] || { p: '#999999' }).p,\n    cornerRadius: 'md', paddingAll: 'sm', margin: 'xs',\n    contents: [{ type: 'text', text: (COLORS[cat] || { n: cat }).n, color: '#ffffff', size: 'xs', weight: 'bold', flex: 0 }]\n  }));\n\n  const footerContents = [];\n  if (kp.length > 0) {\n    footerContents.push({\n      type: 'box', layout: 'vertical', spacing: 'xs',\n      contents: kp.map(p => ({ type: 'text', text: '• ' + p, size: 'xs', color: '#666666', wrap: true }))\n    });\n    footerContents.push({ type: 'separator', margin: 'md' });\n  }\n  footerContents.push({\n    type: 'button', style: 'primary', height: 'sm',\n    color: (COLORS[pc] || { p: '#2196F3' }).p,\n    action: { type: 'uri', label: '查看詳情', uri: c.url || 'https://example.com' }\n  });\n  footerContents.push({\n    type: 'button', style: 'link', height: 'sm',\n    action: { type: 'uri', label: '分享給朋友', uri: 'https://line.me/R/msg/text/?' + encodeURIComponent((c.title || '') + ' ' + (c.url || '')) }\n  });\n\n  return {\n    type: 'bubble', size: 'mega',\n    header: {\n      type: 'box', layout: 'vertical',\n      backgroundColor: (COLORS[pc] || { s: '#f0f0f0' }).s,\n      paddingAll: 'md',\n      contents: [{ type: 'box', layout: 'horizontal', contents: badges }]\n    },\n    body: {\n      type: 'box', layout: 'vertical',\n      contents: [\n        { type: 'text', text: c.title || '未命名比賽', weight: 'bold', size: 'xl', wrap: true },\n        { type: 'box', layout: 'vertical', margin: 'lg', spacing: 'sm', contents: [\n          { type: 'box', layout: 'baseline', spacing: 'sm', contents: [\n            { type: 'text', text: '📅', size: 'sm', flex: 0 },\n            { type: 'text', text: fmtDate(c.publishDate), color: '#666666', size: 'sm', flex: 5, wrap: true }\n          ]},\n          { type: 'box', layout: 'baseline', spacing: 'sm', contents: [\n            { type: 'text', text: '🏢', size: 'sm', flex: 0 },\n            { type: 'text', text: c.organizer || c.source || '未知', color: '#666666', size: 'sm', flex: 5, wrap: true }\n          ]}\n        ]},\n        { type: 'separator', margin: 'lg' },\n        { type: 'text', text: sum, wrap: true, color: '#333333', size: 'sm', margin: 'lg' }\n      ]\n    },\n    footer: { type: 'box', layout: 'vertical', spacing: 'sm', flex: 0, contents: footerContents }\n  };\n}\n\nconst items = $input.all();\nconst competitions = items.map(i => i.json);\n\nlet flexContents;\nif (competitions.length > 1) {\n  flexContents = { type: 'carousel', contents: competitions.slice(0, 10).map(createBubble) };\n} else if (competitions.length === 1) {\n  flexContents = createBubble(competitions[0]);\n} else {\n  return [];\n}\n\nreturn items.map(item => ({\n  json: {\n    ...item.json,\n    lineMessage: {\n      to: 'YOUR_LINE_GROUP_ID',\n      messages: [{\n        type: 'flex',\n        altText: '發現 ' + items.length + ' 個新的 STEAM 比賽資訊',\n        contents: flexContents\n      }]\n    }\n  }\n}));"
+      },
+      "id": "function-flex-msg",
+      "name": "LINE 訊息格式化",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2500, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/push",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_LINE_CHANNEL_ACCESS_TOKEN"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.lineMessage) }}",
+        "options": {}
+      },
+      "id": "http-line-push",
+      "name": "LINE 推播通知",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2750, 400],
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "STEAM_Competitions",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sent_to_line": "TRUE",
+            "sent_at": "={{ $now.toISO() }}"
+          }
+        },
+        "options": {},
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id",
+              "lookupValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "id": "google-sheets-update",
+      "name": "更新推送狀態",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [3000, 400],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// 更新監控數據\nconst now = new Date();\nconst dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');\n\nlet dataCollected = 0;\nlet newData = 0;\nlet filtered = 0;\n\ntry { filtered = $('關鍵字過濾').all().length; } catch (e) {}\ntry { dataCollected = $('資料正規化').all().length; } catch (e) {}\ntry { newData = $input.all().length; } catch (e) {}\n\nconst dedupRate = filtered > 0 ? ((filtered - newData) / filtered * 100).toFixed(1) + '%' : '0%';\nconst qualityScore = dataCollected > 0 ? (filtered / dataCollected * 100).toFixed(1) + '%' : '0%';\n\nreturn [{\n  json: {\n    date: dateStr,\n    execution_count: 1,\n    success_count: newData > 0 ? 1 : 0,\n    failure_count: 0,\n    success_rate: newData > 0 ? '100%' : '0%',\n    data_collected: dataCollected,\n    new_data: newData,\n    dedup_rate: dedupRate,\n    line_sent: newData,\n    line_success_rate: newData > 0 ? '100%' : 'N/A',\n    avg_execution_time: 0,\n    error_count: 0,\n    data_quality_score: qualityScore\n  }\n}];"
+      },
+      "id": "function-monitoring",
+      "name": "更新監控數據",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3000, 200]
+    },
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "錯誤觸發器",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [250, 900]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Error_Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now.toISO() }}",
+            "execution_id": "={{ $execution.id }}",
+            "workflow_name": "={{ $workflow.name }}",
+            "node_name": "={{ $json.execution?.lastNodeExecuted || 'Unknown' }}",
+            "error_type": "={{ $json.execution?.error?.name || 'Error' }}",
+            "error_message": "={{ $json.execution?.error?.message || 'Unknown error' }}",
+            "severity": "error",
+            "resolved": "FALSE",
+            "resolved_at": "",
+            "notes": ""
+          }
+        },
+        "options": {}
+      },
+      "id": "google-sheets-error",
+      "name": "錯誤記錄",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [500, 900],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// LINE 純文字備用格式（Flex Message 失敗時的降級方案）\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const d = item.json;\n  const text = [\n    '\\ud83c\\udfc6 STEAM 比賽資訊',\n    '━━━━━━━━━━━━',\n    '\\ud83d\\udccc ' + (d.title || '未命名'),\n    '\\ud83c\\udfe2 ' + (d.organizer || d.source || '未知'),\n    '\\ud83d\\udcc5 截止：' + (d.registration_end || '未定'),\n    '\\ud83c\\udfaf 對象：' + (d.target_audience || '全年齡'),\n    '\\ud83d\\udd17 ' + (d.url || ''),\n    '━━━━━━━━━━━━'\n  ].join('\\n');\n\n  results.push({\n    json: {\n      ...d,\n      lineMessage: {\n        to: 'YOUR_LINE_GROUP_ID',\n        messages: [{ type: 'text', text: text }]\n      }\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "function-text-msg",
+      "name": "LINE 純文字備用",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2500, 550]
+    }
+  ],
+  "connections": {
+    "定時觸發（每 6 小時）": {
+      "main": [
+        [
+          { "node": "RSS：教育部", "type": "main", "index": 0 },
+          { "node": "RSS：台北市教育局", "type": "main", "index": 0 },
+          { "node": "RSS：STEAM 平台", "type": "main", "index": 0 },
+          { "node": "HTTP：API 資料源", "type": "main", "index": 0 },
+          { "node": "HTTP：網頁爬蟲", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "手動觸發 Webhook": {
+      "main": [
+        [
+          { "node": "RSS：教育部", "type": "main", "index": 0 },
+          { "node": "RSS：台北市教育局", "type": "main", "index": 0 },
+          { "node": "RSS：STEAM 平台", "type": "main", "index": 0 },
+          { "node": "HTTP：API 資料源", "type": "main", "index": 0 },
+          { "node": "HTTP：網頁爬蟲", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "RSS：教育部": {
+      "main": [[ { "node": "資料正規化", "type": "main", "index": 0 } ]]
+    },
+    "RSS：台北市教育局": {
+      "main": [[ { "node": "資料正規化", "type": "main", "index": 0 } ]]
+    },
+    "RSS：STEAM 平台": {
+      "main": [[ { "node": "資料正規化", "type": "main", "index": 0 } ]]
+    },
+    "HTTP：API 資料源": {
+      "main": [[ { "node": "資料正規化", "type": "main", "index": 0 } ]]
+    },
+    "HTTP：網頁爬蟲": {
+      "main": [[ { "node": "資料正規化", "type": "main", "index": 0 } ]]
+    },
+    "資料正規化": {
+      "main": [[ { "node": "關鍵字過濾", "type": "main", "index": 0 } ]]
+    },
+    "關鍵字過濾": {
+      "main": [[ { "node": "讀取現有資料", "type": "main", "index": 0 } ]]
+    },
+    "讀取現有資料": {
+      "main": [[ { "node": "五層去重", "type": "main", "index": 0 } ]]
+    },
+    "五層去重": {
+      "main": [[ { "node": "檢查新資料", "type": "main", "index": 0 } ]]
+    },
+    "檢查新資料": {
+      "main": [
+        [ { "node": "AI 分類+摘要", "type": "main", "index": 0 } ],
+        [ { "node": "無新資料", "type": "main", "index": 0 } ]
+      ]
+    },
+    "AI 分類+摘要": {
+      "main": [[ { "node": "整合 AI 結果", "type": "main", "index": 0 } ]]
+    },
+    "整合 AI 結果": {
+      "main": [
+        [
+          { "node": "批次處理", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "批次處理": {
+      "main": [
+        [
+          { "node": "寫入比賽資料", "type": "main", "index": 0 },
+          { "node": "LINE 訊息格式化", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "更新監控數據", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "LINE 訊息格式化": {
+      "main": [[ { "node": "LINE 推播通知", "type": "main", "index": 0 } ]]
+    },
+    "LINE 推播通知": {
+      "main": [[ { "node": "更新推送狀態", "type": "main", "index": 0 } ]]
+    },
+    "更新推送狀態": {
+      "main": [[ { "node": "批次處理", "type": "main", "index": 0 } ]]
+    },
+    "錯誤觸發器": {
+      "main": [[ { "node": "錯誤記錄", "type": "main", "index": 0 } ]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "STEAM", "id": "steam-tag" },
+    { "name": "教育", "id": "education-tag" },
+    { "name": "自動化", "id": "automation-tag" }
+  ],
+  "triggerCount": 2,
+  "updatedAt": "2026-03-12T00:00:00.000Z",
+  "versionId": "2.0.0"
+}

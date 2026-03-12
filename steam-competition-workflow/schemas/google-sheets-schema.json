@@ -1,0 +1,460 @@
+{
+  "sheets": [
+    {
+      "name": "STEAM_Competitions",
+      "description": "主要資料工作表，儲存所有比賽資訊",
+      "columns": [
+        {
+          "column": "A",
+          "name": "id",
+          "type": "string",
+          "description": "唯一識別碼",
+          "example": "steam_2024_abc12345",
+          "required": true
+        },
+        {
+          "column": "B",
+          "name": "title",
+          "type": "string",
+          "description": "比賽名稱",
+          "example": "2024全國中小學科學展覽會",
+          "required": true
+        },
+        {
+          "column": "C",
+          "name": "organizer",
+          "type": "string",
+          "description": "主辦單位",
+          "example": "教育部國教署",
+          "required": true
+        },
+        {
+          "column": "D",
+          "name": "category",
+          "type": "string",
+          "description": "STEAM分類",
+          "example": "Science",
+          "required": true,
+          "validation": ["Science", "Technology", "Engineering", "Arts", "Math", "Mixed"]
+        },
+        {
+          "column": "E",
+          "name": "target_audience",
+          "type": "string",
+          "description": "目標對象",
+          "example": "國中",
+          "required": true,
+          "validation": ["國小", "國中", "高中", "大學", "全年齡"]
+        },
+        {
+          "column": "F",
+          "name": "registration_start",
+          "type": "date",
+          "description": "報名開始",
+          "example": "2024-03-01",
+          "required": false
+        },
+        {
+          "column": "G",
+          "name": "registration_end",
+          "type": "date",
+          "description": "報名截止",
+          "example": "2024-04-15",
+          "required": false
+        },
+        {
+          "column": "H",
+          "name": "competition_date",
+          "type": "date",
+          "description": "比賽日期",
+          "example": "2024-05-20",
+          "required": false
+        },
+        {
+          "column": "I",
+          "name": "location",
+          "type": "string",
+          "description": "比賽地點",
+          "example": "台北市立科學教育館",
+          "required": false
+        },
+        {
+          "column": "J",
+          "name": "description",
+          "type": "string",
+          "description": "比賽描述",
+          "example": "培養學生科學探究能力...",
+          "required": false
+        },
+        {
+          "column": "K",
+          "name": "url",
+          "type": "string",
+          "description": "官方網址",
+          "example": "https://science.ntsec.edu.tw/",
+          "required": false
+        },
+        {
+          "column": "L",
+          "name": "contact",
+          "type": "string",
+          "description": "聯絡資訊",
+          "example": "02-6610-1234",
+          "required": false
+        },
+        {
+          "column": "M",
+          "name": "prize",
+          "type": "string",
+          "description": "獎項資訊",
+          "example": "第一名獎金10萬元",
+          "required": false
+        },
+        {
+          "column": "N",
+          "name": "fee",
+          "type": "string",
+          "description": "報名費用",
+          "example": "免費",
+          "required": false
+        },
+        {
+          "column": "O",
+          "name": "source",
+          "type": "string",
+          "description": "資料來源",
+          "example": "教育部RSS",
+          "required": true
+        },
+        {
+          "column": "P",
+          "name": "scraped_at",
+          "type": "datetime",
+          "description": "蒐集時間",
+          "example": "2024-03-12 08:00:00",
+          "required": true
+        },
+        {
+          "column": "Q",
+          "name": "status",
+          "type": "string",
+          "description": "狀態",
+          "example": "active",
+          "required": true,
+          "validation": ["active", "expired", "draft", "cancelled"]
+        },
+        {
+          "column": "R",
+          "name": "hash_key",
+          "type": "string",
+          "description": "去重用雜湊",
+          "example": "abc123def456",
+          "required": true
+        },
+        {
+          "column": "S",
+          "name": "sent_to_line",
+          "type": "boolean",
+          "description": "是否已推送",
+          "example": "FALSE",
+          "required": true
+        },
+        {
+          "column": "T",
+          "name": "sent_at",
+          "type": "datetime",
+          "description": "推送時間",
+          "example": "2024-03-12 08:05:00",
+          "required": false
+        }
+      ],
+      "header_row": 1,
+      "data_start_row": 2,
+      "freeze_rows": 1,
+      "freeze_columns": 2
+    },
+    {
+      "name": "Error_Log",
+      "description": "錯誤記錄工作表",
+      "columns": [
+        {
+          "column": "A",
+          "name": "timestamp",
+          "type": "datetime",
+          "description": "錯誤時間",
+          "required": true
+        },
+        {
+          "column": "B",
+          "name": "execution_id",
+          "type": "string",
+          "description": "執行 ID",
+          "required": true
+        },
+        {
+          "column": "C",
+          "name": "workflow_name",
+          "type": "string",
+          "description": "Workflow 名稱",
+          "required": true
+        },
+        {
+          "column": "D",
+          "name": "node_name",
+          "type": "string",
+          "description": "節點名稱",
+          "required": true
+        },
+        {
+          "column": "E",
+          "name": "error_type",
+          "type": "string",
+          "description": "錯誤類型",
+          "required": true
+        },
+        {
+          "column": "F",
+          "name": "error_message",
+          "type": "string",
+          "description": "錯誤訊息",
+          "required": true
+        },
+        {
+          "column": "G",
+          "name": "severity",
+          "type": "string",
+          "description": "嚴重程度",
+          "required": true,
+          "validation": ["info", "warning", "error", "critical"]
+        },
+        {
+          "column": "H",
+          "name": "resolved",
+          "type": "boolean",
+          "description": "是否已解決",
+          "required": true
+        },
+        {
+          "column": "I",
+          "name": "resolved_at",
+          "type": "datetime",
+          "description": "解決時間",
+          "required": false
+        },
+        {
+          "column": "J",
+          "name": "notes",
+          "type": "string",
+          "description": "備註",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "Monitoring_Dashboard",
+      "description": "監控儀表板工作表",
+      "columns": [
+        {
+          "column": "A",
+          "name": "date",
+          "type": "date",
+          "description": "日期",
+          "required": true
+        },
+        {
+          "column": "B",
+          "name": "execution_count",
+          "type": "number",
+          "description": "執行次數",
+          "required": true
+        },
+        {
+          "column": "C",
+          "name": "success_count",
+          "type": "number",
+          "description": "成功次數",
+          "required": true
+        },
+        {
+          "column": "D",
+          "name": "failure_count",
+          "type": "number",
+          "description": "失敗次數",
+          "required": true
+        },
+        {
+          "column": "E",
+          "name": "success_rate",
+          "type": "percentage",
+          "description": "成功率",
+          "required": true,
+          "formula": "=C2/B2"
+        },
+        {
+          "column": "F",
+          "name": "data_collected",
+          "type": "number",
+          "description": "蒐集資料數",
+          "required": true
+        },
+        {
+          "column": "G",
+          "name": "new_data",
+          "type": "number",
+          "description": "新資料數",
+          "required": true
+        },
+        {
+          "column": "H",
+          "name": "dedup_rate",
+          "type": "percentage",
+          "description": "去重率",
+          "required": true,
+          "formula": "=(F2-G2)/F2"
+        },
+        {
+          "column": "I",
+          "name": "line_sent",
+          "type": "number",
+          "description": "LINE 推播數",
+          "required": true
+        },
+        {
+          "column": "J",
+          "name": "line_success_rate",
+          "type": "percentage",
+          "description": "LINE 成功率",
+          "required": true
+        },
+        {
+          "column": "K",
+          "name": "avg_execution_time",
+          "type": "number",
+          "description": "平均執行時間（秒）",
+          "required": true
+        },
+        {
+          "column": "L",
+          "name": "error_count",
+          "type": "number",
+          "description": "錯誤數",
+          "required": true
+        },
+        {
+          "column": "M",
+          "name": "data_quality_score",
+          "type": "percentage",
+          "description": "資料品質分數",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "Review_Queue",
+      "description": "審核佇列工作表（進階版）",
+      "columns": [
+        {
+          "column": "A",
+          "name": "id",
+          "type": "string",
+          "description": "比賽 ID",
+          "required": true
+        },
+        {
+          "column": "B",
+          "name": "title",
+          "type": "string",
+          "description": "比賽名稱",
+          "required": true
+        },
+        {
+          "column": "C",
+          "name": "organizer",
+          "type": "string",
+          "description": "主辦單位",
+          "required": true
+        },
+        {
+          "column": "D",
+          "name": "category",
+          "type": "string",
+          "description": "分類",
+          "required": true
+        },
+        {
+          "column": "E",
+          "name": "target_audience",
+          "type": "string",
+          "description": "目標對象",
+          "required": true
+        },
+        {
+          "column": "F",
+          "name": "registration_end",
+          "type": "date",
+          "description": "報名截止",
+          "required": false
+        },
+        {
+          "column": "G",
+          "name": "url",
+          "type": "string",
+          "description": "網址",
+          "required": false
+        },
+        {
+          "column": "H",
+          "name": "ai_confidence",
+          "type": "percentage",
+          "description": "AI 信心分數",
+          "required": false
+        },
+        {
+          "column": "I",
+          "name": "review_status",
+          "type": "string",
+          "description": "審核狀態",
+          "required": true,
+          "validation": ["待審核", "已核准", "已拒絕"]
+        },
+        {
+          "column": "J",
+          "name": "reviewer",
+          "type": "string",
+          "description": "審核人員",
+          "required": false
+        },
+        {
+          "column": "K",
+          "name": "review_time",
+          "type": "datetime",
+          "description": "審核時間",
+          "required": false
+        },
+        {
+          "column": "L",
+          "name": "review_notes",
+          "type": "string",
+          "description": "審核備註",
+          "required": false
+        },
+        {
+          "column": "M",
+          "name": "auto_approve",
+          "type": "boolean",
+          "description": "是否自動核准",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "setup_instructions": [
+    "1. 建立新的 Google Sheets 文件",
+    "2. 依序建立以上 4 個工作表",
+    "3. 在每個工作表的第一列填入欄位名稱",
+    "4. 設定資料驗證（validation 欄位）",
+    "5. 凍結第一列和前兩欄",
+    "6. 設定條件式格式化（選配）",
+    "7. 分享給 n8n Service Account 並給予編輯權限"
+  ]
+}

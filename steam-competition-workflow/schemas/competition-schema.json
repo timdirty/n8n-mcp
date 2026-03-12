@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "STEAM Competition Data Schema",
+  "description": "標準化的 STEAM 教育比賽資料結構",
+  "type": "object",
+  "required": ["id", "title", "organizer", "category", "source", "scraped_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "唯一識別碼，格式：steam_YYYY_xxxxxxxx",
+      "pattern": "^steam_\\d{4}_[a-f0-9]{8}$",
+      "examples": ["steam_2024_abc12345"]
+    },
+    "title": {
+      "type": "string",
+      "description": "比賽名稱",
+      "minLength": 3,
+      "maxLength": 200,
+      "examples": ["2024全國中小學科學展覽會"]
+    },
+    "organizer": {
+      "type": "string",
+      "description": "主辦單位",
+      "minLength": 2,
+      "maxLength": 100,
+      "examples": ["教育部國民及學前教育署"]
+    },
+    "category": {
+      "type": "string",
+      "description": "STEAM 分類",
+      "enum": ["Science", "Technology", "Engineering", "Arts", "Math", "Mixed"],
+      "examples": ["Science"]
+    },
+    "target_audience": {
+      "type": "string",
+      "description": "目標對象",
+      "enum": ["國小", "國中", "高中", "大學", "全年齡"],
+      "examples": ["國中"]
+    },
+    "registration_start": {
+      "type": ["string", "null"],
+      "description": "報名開始日期（ISO 8601 格式）",
+      "format": "date",
+      "examples": ["2024-03-01"]
+    },
+    "registration_end": {
+      "type": ["string", "null"],
+      "description": "報名截止日期（ISO 8601 格式）",
+      "format": "date",
+      "examples": ["2024-04-15"]
+    },
+    "competition_date": {
+      "type": ["string", "null"],
+      "description": "比賽日期（ISO 8601 格式）",
+      "format": "date",
+      "examples": ["2024-05-20"]
+    },
+    "location": {
+      "type": "string",
+      "description": "比賽地點",
+      "maxLength": 200,
+      "examples": ["台北市立科學教育館", "線上"]
+    },
+    "description": {
+      "type": "string",
+      "description": "比賽描述",
+      "maxLength": 2000,
+      "examples": ["培養學生科學探究能力，鼓勵創新思維..."]
+    },
+    "url": {
+      "type": "string",
+      "description": "官方網址",
+      "format": "uri",
+      "examples": ["https://science.ntsec.edu.tw/"]
+    },
+    "contact": {
+      "type": "string",
+      "description": "聯絡資訊（電話、Email 等）",
+      "maxLength": 200,
+      "examples": ["02-6610-1234", "contact@example.com"]
+    },
+    "prize": {
+      "type": "string",
+      "description": "獎項資訊",
+      "maxLength": 500,
+      "examples": ["第一名獎金10萬元、第二名5萬元"]
+    },
+    "fee": {
+      "type": "string",
+      "description": "報名費用",
+      "maxLength": 100,
+      "examples": ["免費", "500元", "團體報名1000元"]
+    },
+    "source": {
+      "type": "string",
+      "description": "資料來源",
+      "examples": ["教育部RSS", "政府開放資料", "科技部網站"]
+    },
+    "scraped_at": {
+      "type": "string",
+      "description": "資料蒐集時間（ISO 8601 格式）",
+      "format": "date-time",
+      "examples": ["2024-03-12T08:00:00Z"]
+    },
+    "status": {
+      "type": "string",
+      "description": "狀態",
+      "enum": ["active", "expired", "draft", "cancelled"],
+      "default": "active",
+      "examples": ["active"]
+    },
+    "hash_key": {
+      "type": "string",
+      "description": "去重用雜湊值（MD5）",
+      "pattern": "^[a-f0-9]{12}$",
+      "examples": ["abc123def456"]
+    },
+    "sent_to_line": {
+      "type": "boolean",
+      "description": "是否已推送到 LINE",
+      "default": false,
+      "examples": [false]
+    },
+    "sent_at": {
+      "type": ["string", "null"],
+      "description": "推送時間（ISO 8601 格式）",
+      "format": "date-time",
+      "examples": ["2024-03-12T08:05:00Z", null]
+    },
+    "ai_summary": {
+      "type": ["string", "null"],
+      "description": "AI 生成的摘要（完整版功能）",
+      "maxLength": 200,
+      "examples": ["適合國中生的科學實驗競賽，培養探究能力"]
+    },
+    "ai_confidence": {
+      "type": ["number", "null"],
+      "description": "AI 分類信心分數（0-1）",
+      "minimum": 0,
+      "maximum": 1,
+      "examples": [0.95]
+    },
+    "ai_tags": {
+      "type": ["array", "null"],
+      "description": "AI 生成的標籤",
+      "items": {
+        "type": "string"
+      },
+      "examples": [["科學", "實驗", "國中"]]
+    },
+    "review_status": {
+      "type": ["string", "null"],
+      "description": "審核狀態（進階版功能）",
+      "enum": ["待審核", "已核准", "已拒絕", null],
+      "examples": ["已核准"]
+    },
+    "reviewer": {
+      "type": ["string", "null"],
+      "description": "審核人員",
+      "examples": ["張老師", "Auto System"]
+    },
+    "review_time": {
+      "type": ["string", "null"],
+      "description": "審核時間（ISO 8601 格式）",
+      "format": "date-time",
+      "examples": ["2024-03-12T09:00:00Z"]
+    },
+    "review_notes": {
+      "type": ["string", "null"],
+      "description": "審核備註",
+      "maxLength": 500,
+      "examples": ["資訊完整，核准推送"]
+    }
+  },
+  "additionalProperties": false
+}

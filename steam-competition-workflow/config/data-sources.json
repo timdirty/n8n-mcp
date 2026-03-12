@@ -1,0 +1,150 @@
+{
+  "version": "1.1.0",
+  "last_updated": "2026-03-12",
+  "sources": [
+    {
+      "id": "edu_rss",
+      "name": "教育部即時新聞",
+      "type": "rss",
+      "url": "https://www.edu.tw/Rss_News.aspx?n=9E7AC85F1954DDA8",
+      "enabled": true,
+      "priority": 1,
+      "reliability": "high",
+      "update_frequency": "daily",
+      "description": "教育部官方即時新聞RSS，包含各類教育活動和競賽資訊"
+    },
+    {
+      "id": "k12ea_rss",
+      "name": "國教署RSS",
+      "type": "rss",
+      "url": "https://www.k12ea.gov.tw/Tw/Unique/RSS",
+      "enabled": true,
+      "priority": 2,
+      "reliability": "high",
+      "update_frequency": "daily",
+      "description": "國民及學前教育署RSS，K-12教育政策與活動"
+    },
+    {
+      "id": "nstc_news",
+      "name": "國科會最新消息",
+      "type": "rss",
+      "url": "https://www.nstc.gov.tw/nstc/rss/news",
+      "enabled": true,
+      "priority": 3,
+      "reliability": "high",
+      "update_frequency": "daily",
+      "description": "國家科學及技術委員會最新消息，科研計畫與國際合作"
+    },
+    {
+      "id": "nstc_events",
+      "name": "國科會活動訊息",
+      "type": "rss",
+      "url": "https://www.nstc.gov.tw/nstc/rss/events",
+      "enabled": true,
+      "priority": 4,
+      "reliability": "high",
+      "update_frequency": "weekly",
+      "description": "國科會研討會、科學營隊、科普活動等訊息"
+    },
+    {
+      "id": "nmns_rss",
+      "name": "自然科學博物館",
+      "type": "rss",
+      "url": "https://www.nmns.edu.tw/ch/api/newsRss.xml",
+      "enabled": true,
+      "priority": 5,
+      "reliability": "high",
+      "update_frequency": "weekly",
+      "description": "國立自然科學博物館科學教育活動、展覽、工作坊"
+    },
+    {
+      "id": "nstm_rss",
+      "name": "科學工藝博物館",
+      "type": "rss",
+      "url": "https://www.nstm.gov.tw/NewsRSS.aspx?TypeCode=C001110",
+      "enabled": true,
+      "priority": 6,
+      "reliability": "high",
+      "update_frequency": "weekly",
+      "description": "國立科學工藝博物館活動與教育計畫"
+    },
+    {
+      "id": "gov_data",
+      "name": "政府開放資料平台",
+      "type": "api",
+      "url": "https://data.gov.tw/api/v2/rest/dataset/search",
+      "enabled": false,
+      "priority": 10,
+      "reliability": "high",
+      "update_frequency": "daily",
+      "description": "政府開放資料平台，提供各類公開資料集",
+      "note": "API /search endpoint 回傳 400，/dataset/{id} 可用但需知道 dataset ID",
+      "params": {
+        "q": "STEAM 比賽 競賽 科學 程式",
+        "format": "JSON",
+        "limit": "50"
+      }
+    },
+    {
+      "id": "most_web",
+      "name": "科技部網站",
+      "type": "web",
+      "url": "https://www.most.gov.tw/folksonomy/list",
+      "enabled": false,
+      "priority": 11,
+      "reliability": "medium",
+      "update_frequency": "weekly",
+      "description": "科技部科普活動資訊",
+      "note": "type 'web' 尚未實作，需 Phase 2 實作 web-fetcher"
+    },
+    {
+      "id": "ntsec_api",
+      "name": "科教館API",
+      "type": "api",
+      "url": "https://www.ntsec.gov.tw/api/events",
+      "enabled": false,
+      "priority": 4,
+      "reliability": "medium",
+      "update_frequency": "weekly",
+      "description": "國立臺灣科學教育館活動API",
+      "note": "需要API Key，請聯絡科教館申請"
+    },
+    {
+      "id": "taipei_edu",
+      "name": "台北市教育局",
+      "type": "web",
+      "url": "https://www.doe.gov.taipei/",
+      "enabled": false,
+      "priority": 5,
+      "reliability": "medium",
+      "update_frequency": "weekly",
+      "description": "台北市教育局活動資訊"
+    },
+    {
+      "id": "ntpc_edu",
+      "name": "新北市教育局",
+      "type": "web",
+      "url": "https://www.ntpc.edu.tw/",
+      "enabled": false,
+      "priority": 6,
+      "reliability": "medium",
+      "update_frequency": "weekly",
+      "description": "新北市教育局活動資訊"
+    }
+  ],
+  "fallback_sources": [
+    {
+      "id": "google_search",
+      "name": "Google 搜尋",
+      "type": "search",
+      "enabled": false,
+      "description": "當主要資料源失敗時的備用方案"
+    }
+  ],
+  "health_check": {
+    "enabled": true,
+    "interval_minutes": 60,
+    "timeout_seconds": 30,
+    "retry_attempts": 3
+  }
+}

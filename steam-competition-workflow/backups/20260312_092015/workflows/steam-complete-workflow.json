@@ -1,0 +1,307 @@
+{
+  "name": "STEAM 教育比賽資訊蒐集系統（完整版）",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "定時觸發（每 6 小時）",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "steam-trigger",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "手動觸發 Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 500],
+      "webhookId": "steam-manual-trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://www.edu.tw/rss/news.xml",
+        "options": {}
+      },
+      "id": "rss-edu-tw",
+      "name": "RSS：教育部",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [500, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://www.doe.gov.taipei/rss/news.xml",
+        "options": {}
+      },
+      "id": "rss-taipei",
+      "name": "RSS：台北市教育局",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [500, 350]
+    },
+    {
+      "parameters": {
+        "url": "https://steam.edu.tw/rss/competitions.xml",
+        "options": {}
+      },
+      "id": "rss-steam-platform",
+      "name": "RSS：STEAM 平台",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [500, 500]
+    },
+    {
+      "parameters": {
+        "url": "https://api.education-competitions.tw/v1/steam",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "http-api-source",
+      "name": "HTTP：API 資料源",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 650]
+    },
+    {
+      "parameters": {
+        "url": "https://competitions.example.com/steam",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "http-web-scraper",
+      "name": "HTTP：網頁爬蟲",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 800]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// 資料正規化\nconst items = $input.all();\nconst normalized = [];\n\nfor (const item of items) {\n  const data = item.json;\n  \n  // 統一資料格式\n  const normalizedItem = {\n    title: data.title || data.name || '',\n    description: data.description || data.content || data.summary || '',\n    url: data.link || data.url || '',\n    publishDate: data.pubDate || data.date || data.publishedAt || new Date().toISOString(),\n    source: data.source || 'Unknown',\n    image: data.image || data.thumbnail || '',\n    rawData: data,\n    processedAt: new Date().toISOString()\n  };\n  \n  // 資料清洗\n  normalizedItem.title = normalizedItem.title.trim();\n  normalizedItem.description = normalizedItem.description.trim();\n  \n  // 驗證必填欄位\n  if (normalizedItem.title && normalizedItem.description) {\n    normalized.push({ json: normalizedItem });\n  }\n}\n\nreturn normalized;"
+      },
+      "id": "function-normalize",
+      "name": "資料正規化",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 400]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// 關鍵字過濾\nconst items = $input.all();\nconst filtered = [];\n\nconst STEAM_KEYWORDS = [\n  // 科學\n  '科學', '物理', '化學', '生物', '地球科學', '環境',\n  // 技術\n  '程式', '編程', '資訊', 'AI', '人工智慧', '機器學習', '程式設計',\n  // 工程\n  '工程', '機器人', '創客', 'Maker', '電子', '機械',\n  // 藝術\n  '藝術', '設計', '創意', '美術', '音樂',\n  // 數學\n  '數學', '統計', '邏輯',\n  // 通用\n  'STEAM', 'STEM', '競賽', '比賽', '挑戰賽'\n];\n\nfor (const item of items) {\n  const data = item.json;\n  const text = (data.title + ' ' + data.description).toLowerCase();\n  \n  // 檢查是否包含 STEAM 關鍵字\n  const matchedKeywords = STEAM_KEYWORDS.filter(keyword => \n    text.includes(keyword.toLowerCase())\n  );\n  \n  if (matchedKeywords.length > 0) {\n    filtered.push({\n      json: {\n        ...data,\n        matchedKeywords,\n        relevanceScore: matchedKeywords.length / STEAM_KEYWORDS.length\n      }\n    });\n  }\n}\n\nreturn filtered;"
+      },
+      "id": "function-filter",
+      "name": "關鍵字過濾",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 400]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "主資料表",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "google-sheets-read",
+      "name": "讀取現有資料",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1000, 600]
+    }
+  ],
+  "connections": {
+    "定時觸發（每 6 小時）": {
+      "main": [
+        [
+          {
+            "node": "RSS：教育部",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS：台北市教育局",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS：STEAM 平台",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP：API 資料源",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP：網頁爬蟲",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "手動觸發 Webhook": {
+      "main": [
+        [
+          {
+            "node": "RSS：教育部",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS：台北市教育局",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS：STEAM 平台",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP：API 資料源",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP：網頁爬蟲",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS：教育部": {
+      "main": [
+        [
+          {
+            "node": "資料正規化",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS：台北市教育局": {
+      "main": [
+        [
+          {
+            "node": "資料正規化",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS：STEAM 平台": {
+      "main": [
+        [
+          {
+            "node": "資料正規化",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP：API 資料源": {
+      "main": [
+        [
+          {
+            "node": "資料正規化",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP：網頁爬蟲": {
+      "main": [
+        [
+          {
+            "node": "資料正規化",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "資料正規化": {
+      "main": [
+        [
+          {
+            "node": "關鍵字過濾",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "關鍵字過濾": {
+      "main": [
+        [
+          {
+            "node": "讀取現有資料",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "error-handler-workflow"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "STEAM",
+      "id": "steam-tag"
+    },
+    {
+      "name": "教育",
+      "id": "education-tag"
+    },
+    {
+      "name": "自動化",
+      "id": "automation-tag"
+    }
+  ],
+  "triggerCount": 2,
+  "updatedAt": "2026-03-12T00:00:00.000Z",
+  "versionId": "1.0.0"
+}
